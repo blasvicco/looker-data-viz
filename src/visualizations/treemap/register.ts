@@ -1,2 +1,2 @@
-import vis from "."
+import vis from ".";
 looker.plugins.visualizations.add(vis);
