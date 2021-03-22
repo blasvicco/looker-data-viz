@@ -1,25 +1,14 @@
 :root {
-  --primary: #002060;
-  --secondary: #69b1f0;
-  --tertiary: #a8cae8;
-  --black: #000000;
-  --dark-grey: #454545;
-  --soft-grey: #e1e0df;
-  --pale-grey: #f8f8f8;
   --white: #ffffff;
 }
 body {
   font-family: "Open Sans", "Helvetica", sans-serif;
-  background: var(--pale-grey);
+  background: var(--white);
 }
 
 .box {
   stroke-width: 1;
   stroke: var(--white);
-}
-
-.label {
-  fill: var(--white);
 }
 
 .occluded {

@@ -3,6 +3,7 @@ import { hierarchy, treemap } from "d3-hierarchy";
 import { scaleOrdinal, scaleSequential } from "d3-scale";
 import { interpolateRgbBasis } from "d3-interpolate";
 import { extent } from "d3-array";
+import { hsl } from "d3-color";
 import clsx from "clsx";
 import { VisualizationDefinition, VisData, Row } from "types/looker";
 import { formatType, validateResponse } from "common/util";
@@ -13,6 +14,24 @@ interface TreemapVisualization extends VisualizationDefinition {
 }
 
 type Datum = Row | Map<string, Datum>;
+
+const margin = 1;
+const defaultPalette = ["#002060", "#0042C7", "#97BAFF", "#7F7F7F"];
+const defaultGradient = ["#002051", "#7f7c75", "#fdea45"];
+
+const weightedMean = <T>(
+  collection: Iterable<T>,
+  value: (t: T) => number,
+  weight: (t: T) => number
+) => {
+  const denominator = Array.from(collection)
+    .map(weight)
+    .reduce((a, b) => a + b, 0);
+  const numerator = Array.from(collection)
+    .map((t) => weight(t) * value(t))
+    .reduce((a, b) => a + b, 0);
+  return numerator && numerator / denominator;
+};
 
 const reduceDimensions = (dimensions: Array<{ name: string }>) => (
   datum: Datum,
@@ -41,7 +60,6 @@ const buildHierarchy = (data: VisData, dimensions: any[]) => {
   );
 };
 
-const margin = 1;
 const vis: TreemapVisualization = {
   id: "treemap",
   label: "Tree Map",
@@ -54,24 +72,42 @@ const vis: TreemapVisualization = {
       max: 32,
       step: 2,
       default: 14,
+      order: 1,
+    },
+    displayMeasure: {
+      type: "boolean",
+      label: "Display in Labels",
+      display: "boolean",
+      default: true,
+      order: 2,
     },
     palette: {
       type: "array",
       label: "Color Palette",
       display: "colors",
-      default: ["#002060", "#0042C7", "#97BAFF", "#7F7F7F"],
+      default: defaultPalette,
+      order: 3,
     },
     gradient: {
       type: "array",
       label: "Gradient",
       display: "colors",
-      default: ["#002060", "#fdea45"],
+      default: defaultGradient,
+      order: 4,
     },
-    displayMeasure: {
-      type: "boolean",
-      label: "Display Measure in Labels",
-      display: "boolean",
-      default: true,
+    gradientMin: {
+      type: "number",
+      label: "Gradient Min. Value",
+      display: "number",
+      order: 5,
+      display_size: "half",
+    },
+    gradientMax: {
+      type: "number",
+      label: "Gradient Max. Value",
+      display: "number",
+      order: 6,
+      display_size: "half",
     },
   },
   create: function (element, settings) {
@@ -88,9 +124,17 @@ const vis: TreemapVisualization = {
       min_measures: 1,
       max_measures: 2,
     });
+
     const { clientWidth: width, clientHeight: height } = element;
 
-    const { fontSize, palette, gradient, displayMeasure } = config;
+    const {
+      fontSize,
+      palette,
+      gradient,
+      gradientMin,
+      gradientMax,
+      displayMeasure,
+    } = config;
 
     const {
       dimension_like: dimensions,
@@ -108,19 +152,22 @@ const vis: TreemapVisualization = {
       .sort((a, b) => b.value! - a.value!);
 
     const scaleSecondaryMeasure = scaleSequential(
-      interpolateRgbBasis(gradient || [])
+      interpolateRgbBasis(gradient || defaultGradient)
     );
 
     if (secondaryMeasure) {
       const domain = extent(
         data.map((row) => row[secondaryMeasure.name].value)
       );
-      scaleSecondaryMeasure.domain(domain as [number, number]);
+      scaleSecondaryMeasure.domain([
+        gradientMin == null ? domain[0] : gradientMin,
+        gradientMax == null ? domain[1] : gradientMax,
+      ]);
     }
 
     const color = scaleOrdinal<string>()
       .domain(root.children!.map((d) => d.data[0]))
-      .range(palette || []);
+      .range(palette || defaultPalette);
 
     const layout = treemap<[string, Datum]>()
       .size([width - 2 * margin, height - 2 * margin])
@@ -148,9 +195,13 @@ const vis: TreemapVisualization = {
       .attr("width", (d) => d.x1 - d.x0)
       .attr("height", (d) => d.y1 - d.y0)
       .attr("fill", (d) =>
-        secondaryMeasure && d.height === 0
+        secondaryMeasure
           ? scaleSecondaryMeasure(
-              (d.data[1] as Row)[secondaryMeasure.name].value
+              weightedMean(
+                d.leaves().map((leaf) => leaf.data[1] as Row),
+                (row) => row[secondaryMeasure.name].value,
+                (row) => row[primaryMeasure.name].value
+              )
             )
           : color(d.ancestors().slice(-2, -1)[0].data[0])
       );
@@ -161,6 +212,12 @@ const vis: TreemapVisualization = {
       .attr("font-size", (d) => fontSize * Math.pow(1.4, d.height))
       .attr("x", fontSize * 0.5)
       .attr("y", "1.1em")
+      .attr("fill", (_, i, nodes) => {
+        const background = nodes[i]
+          .parentElement!.querySelector(".box")!
+          .getAttribute("fill")!;
+        return hsl(background).l > 0.5 ? "#454545" : "#FFFFFF";
+      })
       .text(
         (node) =>
           `${formatDimension(node.data[0])} ${
