@@ -1,3 +1,4 @@
+import { format } from "d3-format";
 import { VisualizationDefinition, VisQueryResponse } from "types/looker";
 
 export interface ValidationOptions {
@@ -71,4 +72,36 @@ export const validateResponse = (
       options.max_measures
     )
   );
+};
+
+export const formatType = (valueFormat: string) => {
+  if (!valueFormat) return format("");
+  let specifier = "";
+  switch (valueFormat.charAt(0)) {
+    case "$":
+      specifier += "$";
+      break;
+    case "£":
+      specifier += "£";
+      break;
+    case "€":
+      specifier += "€";
+      break;
+  }
+  if (valueFormat.indexOf(",") > -1) {
+    specifier += ",";
+  }
+  const splitValueFormat = valueFormat.split(".");
+  specifier += ".";
+  specifier += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0;
+
+  switch (valueFormat.slice(-1)) {
+    case "%":
+      specifier += "%";
+      break;
+    case "0":
+      specifier += "f";
+      break;
+  }
+  return format(specifier);
 };

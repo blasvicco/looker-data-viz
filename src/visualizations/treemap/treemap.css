@@ -21,3 +21,7 @@ body {
 .label {
   fill: var(--white);
 }
+
+.occluded {
+  visibility: hidden;
+}
