@@ -18,7 +18,7 @@ type Datum = Row | Map<string, Datum>;
 
 const margin = 1;
 const defaultPalette = ["#002060", "#0042C7", "#97BAFF", "#7F7F7F"];
-const defaultGradient = ["#002051", "#7f7c75", "#fdea45"];
+const defaultGradient = ["#E1E0DF", "#002060"];
 
 const weightedMean = <T>(
   collection: Iterable<T>,
