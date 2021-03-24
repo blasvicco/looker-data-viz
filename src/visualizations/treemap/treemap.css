@@ -1,5 +1,6 @@
 :root {
   --white: #ffffff;
+  --black: #000000;
 }
 body {
   font-family: "Open Sans", "Helvetica", sans-serif;
@@ -13,4 +14,12 @@ body {
 
 .occluded {
   visibility: hidden;
+}
+
+.node:focus {
+  outline: none;
+}
+
+.focus-ring {
+  stroke: var(--black);
 }

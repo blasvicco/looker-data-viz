@@ -105,3 +105,6 @@ export const formatType = (valueFormat: string) => {
   }
   return format(specifier);
 };
+
+let uid = 0;
+export const generateUid = () => ++uid;

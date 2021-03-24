@@ -112,6 +112,20 @@ export interface Looker {
   };
 }
 
+export interface DrillOptions {
+  links: Link[];
+  event: Event;
+}
+
+export interface LookerChartsUtils {
+  openDrillMenu(options: DrillOptions);
+}
+
+export interface LookerChartsType {
+  Utils: LookerChartsUtils;
+}
+
 declare global {
   const looker: Looker;
+  const LookerCharts: LookerChartsType;
 }

@@ -1,16 +1,17 @@
 import { select, Selection } from "d3-selection";
-import { hierarchy, treemap } from "d3-hierarchy";
+import { hierarchy, treemap, HierarchyNode } from "d3-hierarchy";
 import { scaleOrdinal, scaleSequential } from "d3-scale";
 import { interpolateRgbBasis } from "d3-interpolate";
 import { extent } from "d3-array";
 import { hsl } from "d3-color";
 import clsx from "clsx";
-import { VisualizationDefinition, VisData, Row } from "types/looker";
-import { formatType, validateResponse } from "common/util";
+import { VisualizationDefinition, VisData, Row, Cell } from "types/looker";
+import { formatType, generateUid, validateResponse } from "common/util";
 import "./treemap.css";
 
 interface TreemapVisualization extends VisualizationDefinition {
   frame?: Selection<SVGGElement, unknown, null, undefined>;
+  focusRing?: Selection<SVGRectElement, unknown, null, undefined>;
 }
 
 type Datum = Row | Map<string, Datum>;
@@ -76,37 +77,44 @@ const vis: TreemapVisualization = {
     },
     displayMeasure: {
       type: "boolean",
-      label: "Display in Labels",
+      label: "Display measure in Labels",
       display: "boolean",
       default: true,
       order: 2,
+    },
+    hideClippedLabels: {
+      type: "boolean",
+      label: "Hide clipped labels",
+      display: "boolean",
+      default: true,
+      order: 3,
     },
     palette: {
       type: "array",
       label: "Color Palette",
       display: "colors",
       default: defaultPalette,
-      order: 3,
+      order: 4,
     },
     gradient: {
       type: "array",
       label: "Gradient",
       display: "colors",
       default: defaultGradient,
-      order: 4,
+      order: 5,
     },
     gradientMin: {
       type: "number",
       label: "Gradient Min. Value",
       display: "number",
-      order: 5,
+      order: 6,
       display_size: "half",
     },
     gradientMax: {
       type: "number",
       label: "Gradient Max. Value",
       display: "number",
-      order: 6,
+      order: 7,
       display_size: "half",
     },
   },
@@ -118,7 +126,7 @@ const vis: TreemapVisualization = {
       .append("g")
       .attr("transform", `translate(${margin}, ${margin})`);
   },
-  update: function (data, element, config, queryResponse) {
+  update: function (data, element, config, queryResponse, details) {
     validateResponse(this, queryResponse, {
       min_dimensions: 1,
       min_measures: 1,
@@ -134,6 +142,7 @@ const vis: TreemapVisualization = {
       gradientMin,
       gradientMax,
       displayMeasure,
+      hideClippedLabels,
     } = config;
 
     const {
@@ -144,6 +153,40 @@ const vis: TreemapVisualization = {
     const formatDimension = (value: string | null) =>
       value === null ? "∅" : value;
     const formatPrimaryMeasure = formatType(primaryMeasure.value_format);
+
+    const activateCell = (event: Event, d: HierarchyNode<[string, Datum]>) => {
+      const links = d
+        .leaves()
+        .map((leaf) => leaf.data[1] as Row)
+        .map((row) => row[primaryMeasure.name] as Cell)
+        .flatMap((cell) => cell.links || [])
+        .map((link) => new URL(link.url, window.location.href));
+
+      if (links.length === 0) {
+        return;
+      }
+
+      const url = links.reduce((acc, url) => {
+        const prev = acc.searchParams;
+        acc.searchParams.forEach((value, key) => {
+          if (url.searchParams.get(key) !== value) {
+            acc.searchParams.delete(key);
+          }
+        });
+        return acc;
+      });
+      LookerCharts.Utils.openDrillMenu({
+        event,
+        links: [
+          {
+            type: "drill",
+            label: `Show all for ${formatDimension(d.data[0])}`,
+            type_label: "Explore",
+            url: url.pathname + url.search,
+          },
+        ],
+      });
+    };
 
     const root = buildHierarchy(data, dimensions)
       .sum(([_, datum]) =>
@@ -169,10 +212,26 @@ const vis: TreemapVisualization = {
       .domain(root.children!.map((d) => d.data[0]))
       .range(palette || defaultPalette);
 
+    const boxFill = (d: HierarchyNode<[string, Datum]>) =>
+      secondaryMeasure
+        ? scaleSecondaryMeasure(
+            weightedMean(
+              d.leaves().map((leaf) => leaf.data[1] as Row),
+              (row) => row[secondaryMeasure.name].value,
+              (row) => row[primaryMeasure.name].value
+            )
+          )
+        : color(d.ancestors().slice(-2, -1)[0].data[0]);
+
+    const textFill = (d: HierarchyNode<[string, Datum]>) =>
+      hsl(boxFill(d)).l > 0.5 ? "#454545" : "#FFFFFF";
+
     const layout = treemap<[string, Datum]>()
       .size([width - 2 * margin, height - 2 * margin])
       .paddingTop((d) => d.depth && fontSize * 1.5 * Math.pow(1.4, d.height))
       .round(true);
+
+    const uidIndex = new Map<HierarchyNode<unknown>, number>();
 
     const nodes = this.frame!.selectAll(".node")
       .data(
@@ -181,9 +240,33 @@ const vis: TreemapVisualization = {
           .filter((d) => d.depth > 0)
       )
       .join((enter) => {
-        const group = enter.append("g").attr("class", "node");
-        group.append("rect").attr("class", "box");
-        group.append("text").attr("class", "label");
+        const group = enter
+          .append("g")
+          .attr("class", "node")
+          .attr("data-uid", (d) => {
+            const uid = generateUid();
+            uidIndex.set(d, uid);
+            return uid;
+          });
+
+        const box = group
+          .append("rect")
+          .attr("class", "box")
+          .attr("id", (d) => `box-${uidIndex.get(d)}`);
+        const clipPath = group
+          .append("clipPath")
+          .attr("id", (d) => `clip-${uidIndex.get(d)}`)
+          .append("use")
+          .attr("href", (d) => `#box-${uidIndex.get(d)}`)
+          .attr("stroke-width", "0.25em");
+        const label = group
+          .append("text")
+          .attr("class", "label")
+          .attr(
+            "clip-path",
+            (_d, i, nodes) =>
+              `url(#clip-${nodes[i].parentElement!.dataset.uid})`
+          );
         return group;
       })
       .attr("class", "node")
@@ -194,17 +277,7 @@ const vis: TreemapVisualization = {
       .data((d) => d)
       .attr("width", (d) => d.x1 - d.x0)
       .attr("height", (d) => d.y1 - d.y0)
-      .attr("fill", (d) =>
-        secondaryMeasure
-          ? scaleSecondaryMeasure(
-              weightedMean(
-                d.leaves().map((leaf) => leaf.data[1] as Row),
-                (row) => row[secondaryMeasure.name].value,
-                (row) => row[primaryMeasure.name].value
-              )
-            )
-          : color(d.ancestors().slice(-2, -1)[0].data[0])
-      );
+      .attr("fill", boxFill);
 
     const labels = nodes
       .selectAll<SVGTextElement, Datum>("text.label")
@@ -212,12 +285,7 @@ const vis: TreemapVisualization = {
       .attr("font-size", (d) => fontSize * Math.pow(1.4, d.height))
       .attr("x", fontSize * 0.5)
       .attr("y", "1.1em")
-      .attr("fill", (_, i, nodes) => {
-        const background = nodes[i]
-          .parentElement!.querySelector(".box")!
-          .getAttribute("fill")!;
-        return hsl(background).l > 0.5 ? "#454545" : "#FFFFFF";
-      })
+      .attr("fill", textFill)
       .text(
         (node) =>
           `${formatDimension(node.data[0])} ${
@@ -231,11 +299,42 @@ const vis: TreemapVisualization = {
           .parentElement!.querySelector(".box")!
           .getBoundingClientRect();
         const occluded =
-          label.left < rect.left ||
-          label.right > rect.right ||
-          label.top < rect.top ||
-          label.bottom > rect.bottom;
+          hideClippedLabels &&
+          (label.left < rect.left ||
+            label.right > rect.right ||
+            label.top < rect.top ||
+            label.bottom > rect.bottom);
         return clsx("label", { occluded });
+      });
+
+    nodes
+      .attr("role", "button")
+      .style("cursor", "pointer")
+      .attr("tabindex", 0)
+      .attr("aria-label", (d) => d.data[0])
+      .on("focus", (_event, d) => {
+        this.focusRing = this.frame!.append("rect")
+          .attr("class", "focus-ring")
+          .attr("fill", "none")
+          .attr("x", d.x0)
+          .attr("y", d.y0)
+          .attr("width", d.x1 - d.x0)
+          .attr("height", d.y1 - d.y0);
+      })
+      .on("blur", () => {
+        this.focusRing?.remove();
+      })
+      .on("click", activateCell)
+      .on("keydown", (event: KeyboardEvent, d) => {
+        if (event.code === "Space" || event.code === "Enter") {
+          activateCell(
+            Object.assign(event, {
+              pageX: d.x0 + (d.x1 - d.x0) / 2,
+              pageY: d.y0 + (d.y1 - d.y0) / 2,
+            }),
+            d
+          );
+        }
       });
   },
 };
