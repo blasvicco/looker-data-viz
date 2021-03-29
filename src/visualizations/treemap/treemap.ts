@@ -79,14 +79,14 @@ const vis: TreemapVisualization = {
       type: "boolean",
       label: "Display measure in Labels",
       display: "boolean",
-      default: true,
+      default: false,
       order: 2,
     },
     hideClippedLabels: {
       type: "boolean",
       label: "Hide clipped labels",
       display: "boolean",
-      default: true,
+      default: false,
       order: 3,
     },
     palette: {
