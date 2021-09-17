@@ -102,6 +102,9 @@ export const formatType = (valueFormat: string) => {
     case "0":
       specifier += "f";
       break;
+    case "s":
+      specifier += "s";
+      break;
   }
   return format(specifier);
 };

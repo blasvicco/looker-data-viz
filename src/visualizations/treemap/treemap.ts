@@ -82,39 +82,46 @@ const vis: TreemapVisualization = {
       default: false,
       order: 2,
     },
+    measureFormat: {
+      type: "string",
+      label: "Measure Format",
+      display: "text",
+      placeholder: "Spreadsheet-style format code",
+      order: 3,
+    },
     hideClippedLabels: {
       type: "boolean",
       label: "Hide clipped labels",
       display: "boolean",
       default: false,
-      order: 3,
+      order: 4,
     },
     palette: {
       type: "array",
       label: "Color Palette",
       display: "colors",
       default: defaultPalette,
-      order: 4,
+      order: 5,
     },
     gradient: {
       type: "array",
       label: "Gradient",
       display: "colors",
       default: defaultGradient,
-      order: 5,
+      order: 6,
     },
     gradientMin: {
       type: "number",
       label: "Gradient Min. Value",
       display: "number",
-      order: 6,
+      order: 7,
       display_size: "half",
     },
     gradientMax: {
       type: "number",
       label: "Gradient Max. Value",
       display: "number",
-      order: 7,
+      order: 8,
       display_size: "half",
     },
   },
@@ -142,23 +149,44 @@ const vis: TreemapVisualization = {
       gradientMin,
       gradientMax,
       displayMeasure,
+      measureFormat,
       hideClippedLabels,
     } = config;
 
     const {
-      dimension_like: dimensions,
-      measure_like: [primaryMeasure, secondaryMeasure],
-    } = queryResponse.fields;
+      fields: {
+        dimension_like: dimensions,
+        measure_like: [primaryMeasure, secondaryMeasure],
+      },
+      pivots: [primaryPivot, secondaryPivot],
+    } = queryResponse;
+
+    const isWeighted = secondaryPivot || secondaryMeasure;
+
+    const getPrimaryCell = (row: Row) =>
+      primaryPivot
+        ? row[primaryMeasure.name][primaryPivot.key]
+        : row[primaryMeasure.name];
+
+    const getSecondaryCell = (row: Row) =>
+      secondaryPivot
+        ? row[primaryMeasure.name][secondaryPivot.key]
+        : row[secondaryMeasure.name];
+
+    console.log(getPrimaryCell(queryResponse.data[0]));
+    console.log(getSecondaryCell(queryResponse.data[0]));
 
     const formatDimension = (value: string | null) =>
       value === null ? "∅" : value;
-    const formatPrimaryMeasure = formatType(primaryMeasure.value_format);
+    const formatPrimaryMeasure = formatType(
+      measureFormat || primaryMeasure.value_format
+    );
 
     const activateCell = (event: Event, d: HierarchyNode<[string, Datum]>) => {
       const links = d
         .leaves()
         .map((leaf) => leaf.data[1] as Row)
-        .map((row) => row[primaryMeasure.name] as Cell)
+        .map((row) => getPrimaryCell(row) as Cell)
         .flatMap((cell) => cell.links || [])
         .map((link) => new URL(link.url, window.location.href));
 
@@ -190,7 +218,7 @@ const vis: TreemapVisualization = {
 
     const root = buildHierarchy(data, dimensions)
       .sum(([_, datum]) =>
-        datum instanceof Map ? 0 : datum[primaryMeasure.name].value
+        datum instanceof Map ? 0 : getPrimaryCell(datum).value
       )
       .sort((a, b) => b.value! - a.value!);
 
@@ -198,10 +226,9 @@ const vis: TreemapVisualization = {
       interpolateRgbBasis(gradient || defaultGradient)
     );
 
-    if (secondaryMeasure) {
-      const domain = extent(
-        data.map((row) => row[secondaryMeasure.name].value)
-      );
+    if (isWeighted) {
+      const domain = extent(data.map((row) => getSecondaryCell(row).value));
+      console.log(domain);
       scaleSecondaryMeasure.domain([
         gradientMin == null ? domain[0] : gradientMin,
         gradientMax == null ? domain[1] : gradientMax,
@@ -213,12 +240,12 @@ const vis: TreemapVisualization = {
       .range(palette || defaultPalette);
 
     const boxFill = (d: HierarchyNode<[string, Datum]>) =>
-      secondaryMeasure
+      isWeighted
         ? scaleSecondaryMeasure(
             weightedMean(
               d.leaves().map((leaf) => leaf.data[1] as Row),
-              (row) => row[secondaryMeasure.name].value,
-              (row) => row[primaryMeasure.name].value
+              (row) => getSecondaryCell(row).value,
+              (row) => getPrimaryCell(row).value
             )
           )
         : color(d.ancestors().slice(-2, -1)[0].data[0]);
