@@ -158,7 +158,7 @@ const vis: TreemapVisualization = {
         dimension_like: dimensions,
         measure_like: [primaryMeasure, secondaryMeasure],
       },
-      pivots: [primaryPivot, secondaryPivot],
+      pivots: [primaryPivot, secondaryPivot] = [],
     } = queryResponse;
 
     const isWeighted = secondaryPivot || secondaryMeasure;
@@ -172,9 +172,6 @@ const vis: TreemapVisualization = {
       secondaryPivot
         ? row[primaryMeasure.name][secondaryPivot.key]
         : row[secondaryMeasure.name];
-
-    console.log(getPrimaryCell(queryResponse.data[0]));
-    console.log(getSecondaryCell(queryResponse.data[0]));
 
     const formatDimension = (value: string | null) =>
       value === null ? "∅" : value;
