@@ -170,7 +170,7 @@ const vis: TreemapVisualization = {
       return;
     }
 
-    const isWeighted = measures[1] || table_calculations[1];
+    const isWeighted = table_calculations[1] || pivots[1] || measures[1];
 
     const getPrimaryCell = (row: Row) => {
       if (table_calculations[0]) {
