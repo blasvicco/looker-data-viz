@@ -134,11 +134,7 @@ const vis: TreemapVisualization = {
       .attr("transform", `translate(${margin}, ${margin})`);
   },
   update: function (data, element, config, queryResponse, details) {
-    validateResponse(this, queryResponse, {
-      min_dimensions: 1,
-      min_measures: 1,
-      max_measures: 2,
-    });
+    this.clearErrors!();
 
     const { clientWidth: width, clientHeight: height } = element;
 
@@ -154,29 +150,52 @@ const vis: TreemapVisualization = {
     } = config;
 
     const {
-      fields: {
-        dimension_like: dimensions,
-        measure_like: [primaryMeasure, secondaryMeasure],
-      },
-      pivots: [primaryPivot, secondaryPivot] = [],
+      fields: { dimensions, measures, table_calculations },
+      pivots = [],
     } = queryResponse;
 
-    const isWeighted = secondaryPivot || secondaryMeasure;
+    if (dimensions.length === 0) {
+      this.addError!({
+        title: "Dimensions Required",
+        message: "Please include at least one dimension.",
+      });
+      return;
+    }
+    if (!measures[0] && !table_calculations[0]) {
+      this.addError!({
+        title: "Primary Measure Required",
+        message:
+          "Please include at least one un-pivoted measure or table calculation.",
+      });
+      return;
+    }
 
-    const getPrimaryCell = (row: Row) =>
-      primaryPivot
-        ? row[primaryMeasure.name][primaryPivot.key]
-        : row[primaryMeasure.name];
+    const isWeighted = measures[1] || table_calculations[1];
 
-    const getSecondaryCell = (row: Row) =>
-      secondaryPivot
-        ? row[primaryMeasure.name][secondaryPivot.key]
-        : row[secondaryMeasure.name];
+    const getPrimaryCell = (row: Row) => {
+      if (table_calculations[0]) {
+        return row[table_calculations[0].name];
+      } else if (pivots[0]) {
+        return row[measures[0].name][pivots[0].key];
+      } else if (measures[0]) {
+        return row[measures[0].name];
+      }
+    };
+
+    const getSecondaryCell = (row: Row) => {
+      if (table_calculations[1]) {
+        return row[table_calculations[1].name];
+      } else if (pivots[1]) {
+        return row[measures[0].name][pivots[1].key];
+      } else if (measures[1]) {
+        return row[measures[1].name];
+      }
+    };
 
     const formatDimension = (value: string | null) =>
       value === null ? "∅" : value;
     const formatPrimaryMeasure = formatType(
-      measureFormat || primaryMeasure.value_format
+      measureFormat || measures[0].value_format
     );
 
     const activateCell = (event: Event, d: HierarchyNode<[string, Datum]>) => {
@@ -225,7 +244,6 @@ const vis: TreemapVisualization = {
 
     if (isWeighted) {
       const domain = extent(data.map((row) => getSecondaryCell(row).value));
-      console.log(domain);
       scaleSecondaryMeasure.domain([
         gradientMin == null ? domain[0] : gradientMin,
         gradientMax == null ? domain[1] : gradientMax,
