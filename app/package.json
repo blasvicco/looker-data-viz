@@ -5,8 +5,7 @@
   "author": "",
   "license": "MPL-2.0",
   "scripts": {
-    "start": "webpack serve --mode development",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production && cp ../yarn.lock ./"
   },
   "devDependencies": {
     "@babel/core": "^7.13.10",

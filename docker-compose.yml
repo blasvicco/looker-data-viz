@@ -1,0 +1,7 @@
+services:
+  dev:
+    build: .
+    command: 'tail -f /dev/null'
+    container_name: enveritas
+    volumes:
+      - ./app:/home/app
