@@ -54,8 +54,8 @@ const reduceDimensions = (dimensions: Array<{ name: string }>) => (
   const map = datum as Map<string, Datum>
   const [dim, ...rest] = dimensions
   const key = row[dim.name].value
-  const child =
-    (map.get(key) as Map<string, Datum>) || new Map<string, Datum>()
+  const child = (map.get(key) as Map<string, Datum>)
+    || new Map<string, Datum>()
   return map.set(key, reduceDimensions(rest)(child, row))
 }
 
