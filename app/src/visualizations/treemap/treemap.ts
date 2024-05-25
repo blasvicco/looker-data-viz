@@ -1,12 +1,15 @@
-import { select, Selection } from 'd3-selection'
-import { hierarchy, treemap, HierarchyNode } from 'd3-hierarchy'
-import { scaleOrdinal, scaleSequential } from 'd3-scale'
-import { interpolateRgbBasis } from 'd3-interpolate'
+// Lib imports
+import clsx from 'clsx'
 import { extent } from 'd3-array'
 import { hsl } from 'd3-color'
-import clsx from 'clsx'
-import { VisDefinition, VisData, Row, Cell } from 'types/looker'
+import { hierarchy, treemap, HierarchyNode } from 'd3-hierarchy'
+import { interpolateRgbBasis } from 'd3-interpolate'
+import { scaleOrdinal, scaleSequential } from 'd3-scale'
+import { select, Selection } from 'd3-selection'
+
+// App imports
 import { formatType, generateUid } from 'common/util'
+import { VisDefinition, VisData, Row, Cell } from 'types/looker'
 import './treemap.css'
 
 interface TreemapVisualization extends VisDefinition {
