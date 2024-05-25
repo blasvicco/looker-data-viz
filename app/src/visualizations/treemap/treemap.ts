@@ -15,17 +15,20 @@ import './treemap.css'
 /*********************/
 /****** Private ******/
 /*********************/
+// type declaration
+type Datum = Row | Map<string, Datum>
+
+// interface declaration
 interface TreemapVisualization extends VisDefinition {
   frame?: Selection<SVGGElement, unknown, null, undefined>
   focusRing?: Selection<SVGRectElement, unknown, null, undefined>
 }
 
-type Datum = Row | Map<string, Datum>
-
 const margin = 1
 const defaultPalette = ['#002060', '#0042C7', '#97BAFF', '#7F7F7F']
 const defaultGradient = ['#E1E0DF', '#002060']
 
+// methods declaration
 const weightedMean = <T>(
   collection: Iterable<T>,
   value: (t: T) => number,
@@ -383,4 +386,5 @@ const vis: TreemapVisualization = {
 /*********************/
 /****** Public *******/
 /*********************/
+// export default
 export default vis
