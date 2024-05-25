@@ -25,12 +25,14 @@ interface TGroup {
 
 // class declaration
 class CGroup implements TGroup {
+  // attributes declaration
   count: number
   max?: number
   min?: number
   name: string
   noun: string
 
+  // methods declaration
   constructor(group: TGroup) {
     this.count = group.count
     this.max = group.max
