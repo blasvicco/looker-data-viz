@@ -138,18 +138,9 @@ export const validateResponse = (
 
 export const formatType = (valueFormat: string) => {
   if (!valueFormat) return format('')
-  let specifier = ''
-  switch (valueFormat.charAt(0)) {
-    case '$':
-      specifier += '$'
-      break
-    case '£':
-      specifier += '£'
-      break
-    case '€':
-      specifier += '€'
-      break
-  }
+  let specifier = (valueFormat.charAt(0) in ['$', '£', '€'])
+    ? valueFormat.charAt(0)
+    : ''
   if (valueFormat.indexOf(',') > -1) {
     specifier += ','
   }
