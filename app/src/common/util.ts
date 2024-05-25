@@ -37,9 +37,6 @@ class CGroup implements TGroup {
     this.min = group.min
     this.name = group.name
     this.noun = group.noun
-
-    this.pluralize = this.pluralize.bind(this)
-    this.validate = this.validate.bind(this)
   }
 
   pluralize = (): string => {
