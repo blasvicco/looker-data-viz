@@ -1,6 +1,59 @@
-export interface VisOptionValue {
-  [label: string]: string
+
+/*********************/
+/****** Public *******/
+/*********************/
+// type declaration
+export type VisConfigValue = any
+export type VisData = Row[]
+
+// Interface declaration
+export interface Cell {
+  [key: string]: any
+  value: any
+  rendered?: string
+  html?: string
+  links?: Link[]
 }
+
+export interface DrillOptions {
+  links: Link[]
+  event: Event
+}
+
+export interface Link {
+  label: string
+  type: string
+  type_label: string
+  url: string
+}
+
+export interface LookerChartsType {
+  Utils: LookerChartsUtils
+}
+
+export interface LookerChartsUtils {
+  openDrillMenu(options: DrillOptions)
+}
+
+export interface Pivot {
+  key: string
+  is_total: boolean
+  data: { [key: string]: string }
+  metadata: { [key: string]: { [key: string]: string } }
+}
+
+export interface PivotCell {
+  [pivotKey: string]: Cell
+}
+
+export interface Row {
+  [fieldName: string]: PivotCell | Cell
+}
+
+export interface VisConfig {
+  [key: string]: VisConfigValue
+}
+
 export interface VisOption {
   type: string
   values?: VisOptionValue[]
@@ -16,42 +69,15 @@ export interface VisOption {
   step?: number
   required?: boolean
 }
+
 export interface VisOptions {
   [optionName: string]: VisOption
 }
 
-export type VisConfigValue = any
-export interface VisConfig {
-  [key: string]: VisConfigValue
+export interface VisOptionValue {
+  [label: string]: string
 }
 
-export interface Link {
-  label: string
-  type: string
-  type_label: string
-  url: string
-}
-export interface Cell {
-  [key: string]: any
-  value: any
-  rendered?: string
-  html?: string
-  links?: Link[]
-}
-export interface PivotCell {
-  [pivotKey: string]: Cell
-}
-export interface Row {
-  [fieldName: string]: PivotCell | Cell
-}
-export type VisData = Row[]
-
-export interface Pivot {
-  key: string
-  is_total: boolean
-  data: { [key: string]: string }
-  metadata: { [key: string]: { [key: string]: string } }
-}
 export interface VisQueryResponse {
   [key: string]: any
   data: VisData
@@ -112,19 +138,7 @@ export interface Looker {
   }
 }
 
-export interface DrillOptions {
-  links: Link[]
-  event: Event
-}
-
-export interface LookerChartsUtils {
-  openDrillMenu(options: DrillOptions)
-}
-
-export interface LookerChartsType {
-  Utils: LookerChartsUtils
-}
-
+// Global declaration
 declare global {
   const looker: Looker
   const LookerCharts: LookerChartsType
