@@ -17,6 +17,14 @@ interface Link {
   url: string
 }
 
+interface Looker {
+  plugins: {
+    visualizations: {
+      add: (visualization: VisDefinition) => void;
+    };
+  }
+}
+
 interface LookerChartsType {
   Utils: LookerChartsUtils
 }
@@ -78,14 +86,6 @@ interface VisUpdateDetails {
     data?: boolean;
     queryResponse?: boolean;
     size?: boolean;
-  }
-}
-
-interface Looker {
-  plugins: {
-    visualizations: {
-      add: (visualization: VisDefinition) => void;
-    };
   }
 }
 
