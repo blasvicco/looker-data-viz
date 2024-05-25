@@ -1,64 +1,64 @@
 export interface VisOptionValue {
-  [label: string]: string;
+  [label: string]: string
 }
 export interface VisOption {
-  type: string;
-  values?: VisOptionValue[];
-  display?: string;
-  default?: any;
-  label: string;
-  section?: string;
-  placeholder?: string;
-  display_size?: "half" | "third" | "normal";
-  order?: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  required?: boolean;
+  type: string
+  values?: VisOptionValue[]
+  display?: string
+  default?: any
+  label: string
+  section?: string
+  placeholder?: string
+  display_size?: 'half' | 'third' | 'normal'
+  order?: number
+  min?: number
+  max?: number
+  step?: number
+  required?: boolean
 }
 export interface VisOptions {
-  [optionName: string]: VisOption;
+  [optionName: string]: VisOption
 }
 
-export type VisConfigValue = any;
+export type VisConfigValue = any
 export interface VisConfig {
-  [key: string]: VisConfigValue;
+  [key: string]: VisConfigValue
 }
 
 export interface Link {
-  label: string;
-  type: string;
-  type_label: string;
-  url: string;
+  label: string
+  type: string
+  type_label: string
+  url: string
 }
 export interface Cell {
-  [key: string]: any;
-  value: any;
-  rendered?: string;
-  html?: string;
-  links?: Link[];
+  [key: string]: any
+  value: any
+  rendered?: string
+  html?: string
+  links?: Link[]
 }
 export interface PivotCell {
-  [pivotKey: string]: Cell;
+  [pivotKey: string]: Cell
 }
 export interface Row {
-  [fieldName: string]: PivotCell | Cell;
+  [fieldName: string]: PivotCell | Cell
 }
-export type VisData = Row[];
+export type VisData = Row[]
 
 export interface Pivot {
-  key: string;
-  is_total: boolean;
-  data: { [key: string]: string };
-  metadata: { [key: string]: { [key: string]: string } };
+  key: string
+  is_total: boolean
+  data: { [key: string]: string }
+  metadata: { [key: string]: { [key: string]: string } }
 }
 export interface VisQueryResponse {
-  [key: string]: any;
-  data: VisData;
+  [key: string]: any
+  data: VisData
   fields: {
     [key: string]: any[];
-  };
-  pivots: Pivot[];
+  }
+  pivots: Pivot[]
 }
 
 export interface VisUpdateDetails {
@@ -67,32 +67,32 @@ export interface VisUpdateDetails {
     data?: boolean;
     queryResponse?: boolean;
     size?: boolean;
-  };
+  }
 }
 
 export interface VisualizationError {
-  group?: string;
-  message?: string;
-  title?: string;
-  retryable?: boolean;
-  warning?: boolean;
+  group?: string
+  message?: string
+  title?: string
+  retryable?: boolean
+  warning?: boolean
 }
 
 export interface VisualizationDefinition {
-  id?: string;
-  label?: string;
-  options: VisOptions;
-  addError?: (error: VisualizationError) => void;
-  clearErrors?: (errorName?: string) => void;
-  create: (element: HTMLElement, settings: VisConfig) => void;
-  trigger?: (event: string, config: object[]) => void;
+  id?: string
+  label?: string
+  options: VisOptions
+  addError?: (error: VisualizationError) => void
+  clearErrors?: (errorName?: string) => void
+  create: (element: HTMLElement, settings: VisConfig) => void
+  trigger?: (event: string, config: object[]) => void
   update?: (
     data: VisData,
     element: HTMLElement,
     config: VisConfig,
     queryResponse: VisQueryResponse,
     details?: VisUpdateDetails
-  ) => void;
+  ) => void
   updateAsync?: (
     data: VisData,
     element: HTMLElement,
@@ -100,8 +100,8 @@ export interface VisualizationDefinition {
     queryResponse: VisQueryResponse,
     details: VisUpdateDetails | undefined,
     updateComplete: () => void
-  ) => void;
-  destroy?: () => void;
+  ) => void
+  destroy?: () => void
 }
 
 export interface Looker {
@@ -109,23 +109,23 @@ export interface Looker {
     visualizations: {
       add: (visualization: VisualizationDefinition) => void;
     };
-  };
+  }
 }
 
 export interface DrillOptions {
-  links: Link[];
-  event: Event;
+  links: Link[]
+  event: Event
 }
 
 export interface LookerChartsUtils {
-  openDrillMenu(options: DrillOptions);
+  openDrillMenu(options: DrillOptions)
 }
 
 export interface LookerChartsType {
-  Utils: LookerChartsUtils;
+  Utils: LookerChartsUtils
 }
 
 declare global {
-  const looker: Looker;
-  const LookerCharts: LookerChartsType;
+  const looker: Looker
+  const LookerCharts: LookerChartsType
 }
