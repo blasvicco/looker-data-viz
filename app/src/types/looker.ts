@@ -30,7 +30,7 @@ interface LookerChartsType {
 }
 
 interface LookerChartsUtils {
-  openDrillMenu(options: DrillOptions)
+  openDrillMenu(options: DrillOptions): any
 }
 
 interface Pivot {
