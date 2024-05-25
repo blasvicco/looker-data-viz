@@ -101,14 +101,14 @@ const vis: TreemapVisualization = {
     },
     gradientMax: {
       display: 'number',
-      display_size: 'half'
+      display_size: 'half',
       label: 'Gradient Max. Value',
       order: 8,
       type: 'number'
     },
     gradientMin: {
       display: 'number',
-      display_size: 'half'
+      display_size: 'half',
       label: 'Gradient Min. Value',
       order: 7,
       type: 'number'
