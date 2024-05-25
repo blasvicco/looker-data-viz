@@ -4,7 +4,7 @@
 // type declaration
 type VisConfigValue = any
 
-// Interface declaration
+// interface declaration
 interface DrillOptions {
   links: Link[]
   event: Event
@@ -95,7 +95,7 @@ interface VisUpdateDetails {
 // type declaration
 export type VisData = Row[]
 
-// Interface declaration
+// interface declaration
 export interface Cell {
   [key: string]: any
   value: any
@@ -109,12 +109,16 @@ export interface Row {
 }
 
 export interface VisDefinition {
+  // attributes
   id?: string
   label?: string
   options: VisOptions
+  // methods
+  create: (element: HTMLElement, settings: VisConfig) => void
+  // optional methods
   addError?: (error: VisError) => void
   clearErrors?: (errorName?: string) => void
-  create: (element: HTMLElement, settings: VisConfig) => void
+  destroy?: () => void
   trigger?: (event: string, config: object[]) => void
   update?: (
     data: VisData,
@@ -131,7 +135,6 @@ export interface VisDefinition {
     details: VisUpdateDetails | undefined,
     updateComplete: () => void
   ) => void
-  destroy?: () => void
 }
 
 export interface VisQueryResponse {
@@ -143,7 +146,7 @@ export interface VisQueryResponse {
   pivots: Pivot[]
 }
 
-// Global declaration
+// global declaration
 declare global {
   const looker: Looker
   const LookerCharts: LookerChartsType
