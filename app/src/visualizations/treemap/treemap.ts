@@ -24,9 +24,10 @@ interface TreemapVisualization extends VisDefinition {
   focusRing?: Selection<SVGRectElement, unknown, null, undefined>
 }
 
-const margin = 1
-const defaultPalette = ['#002060', '#0042C7', '#97BAFF', '#7F7F7F']
-const defaultGradient = ['#E1E0DF', '#002060']
+// constant declaration
+const DEFAULT_GRADIENT = ['#E1E0DF', '#002060']
+const DEFAULT_PALETTE = ['#002060', '#0042C7', '#97BAFF', '#7F7F7F']
+const MARGIN = 1
 
 // methods declaration
 const weightedMean = <T>(
@@ -109,14 +110,14 @@ const vis: TreemapVisualization = {
       type: 'array',
       label: 'Color Palette',
       display: 'colors',
-      default: defaultPalette,
+      default: DEFAULT_PALETTE,
       order: 5
     },
     gradient: {
       type: 'array',
       label: 'Gradient',
       display: 'colors',
-      default: defaultGradient,
+      default: DEFAULT_GRADIENT,
       order: 6
     },
     gradientMin: {
@@ -140,7 +141,7 @@ const vis: TreemapVisualization = {
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
-      .attr('transform', `translate(${margin}, ${margin})`)
+      .attr('transform', `translate(${MARGIN}, ${MARGIN})`)
   },
   update: function (data, element, config, queryResponse, details) {
     this.clearErrors!()
@@ -247,7 +248,7 @@ const vis: TreemapVisualization = {
       .sort((a, b) => b.value! - a.value!)
 
     const scaleSecondaryMeasure = scaleSequential(
-      interpolateRgbBasis(gradient || defaultGradient)
+      interpolateRgbBasis(gradient || DEFAULT_GRADIENT)
     )
 
     if (isWeighted) {
@@ -260,7 +261,7 @@ const vis: TreemapVisualization = {
 
     const color = scaleOrdinal<string>()
       .domain(root.children!.map((d) => d.data[0]))
-      .range(palette || defaultPalette)
+      .range(palette || DEFAULT_PALETTE)
 
     const boxFill = (d: HierarchyNode<[string, Datum]>) =>
       isWeighted
@@ -277,7 +278,7 @@ const vis: TreemapVisualization = {
       hsl(boxFill(d)).l > 0.5 ? '#454545' : '#FFFFFF'
 
     const layout = treemap<[string, Datum]>()
-      .size([width - 2 * margin, height - 2 * margin])
+      .size([width - 2 * MARGIN, height - 2 * MARGIN])
       .paddingTop((d) => d.depth && fontSize * 1.5 * Math.pow(1.4, d.height))
       .round(true)
 
