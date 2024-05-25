@@ -147,18 +147,13 @@ export const formatType = (valueFormat: string) => {
   const splitValueFormat = valueFormat.split('.')
   specifier += '.'
   specifier += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0
-
-  switch (valueFormat.slice(-1)) {
-    case '%':
-      specifier += '%'
-      break
-    case '0':
-      specifier += 'f'
-      break
-    case 's':
-      specifier += 's'
-      break
+  const translator = {
+    '%': '%',
+    '0': 'f',
+    's': 's'
   }
+  const key = valueFormat.slice(-1) as keyof typeof translator
+  specifier += translator[key] || ''
   return format(specifier)
 }
 
