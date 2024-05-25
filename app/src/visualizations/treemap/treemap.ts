@@ -30,6 +30,33 @@ const DEFAULT_PALETTE = ['#002060', '#0042C7', '#97BAFF', '#7F7F7F']
 const MARGIN = 1
 
 // methods declaration
+const buildHierarchy = (data: VisData, dimensions: any[]) => {
+  const flatten = (dimensions: Array<{ name: string }>) => (
+    datum: Datum,
+    row: Row
+  ): Datum => {
+    if (dimensions.length === 0) {
+      return row
+    }
+    const map = datum as Map<string, Datum>
+    const [dim, ...rest] = dimensions
+    const key = row[dim.name].value
+    const child = (map.get(key) as Map<string, Datum>)
+      || new Map<string, Datum>()
+    return map.set(key, flatten(rest)(child, row))
+  }
+
+  return hierarchy(
+    [
+      'root',
+      data.reduce(flatten(dimensions), new Map<string, Datum>())
+    ],
+    ([_label, children]: [string, Datum]) => {
+      return children instanceof Map ? [...children.entries()] : null
+    }
+  )
+}
+
 const weightedMean = <T>(
   collection: Iterable<T>,
   value: (t: T) => number,
@@ -40,33 +67,6 @@ const weightedMean = <T>(
   const numerator = Array.from(collection)
     .reduce((sum, item) => sum + weight(item) * value(item), 0)
   return numerator && numerator / denominator
-}
-
-const reduceDimensions = (dimensions: Array<{ name: string }>) => (
-  datum: Datum,
-  row: Row
-): Datum => {
-  if (dimensions.length === 0) {
-    return row
-  }
-  const map = datum as Map<string, Datum>
-  const [dim, ...rest] = dimensions
-  const key = row[dim.name].value
-  const child = (map.get(key) as Map<string, Datum>)
-    || new Map<string, Datum>()
-  return map.set(key, reduceDimensions(rest)(child, row))
-}
-
-const buildHierarchy = (data: VisData, dimensions: any[]) => {
-  return hierarchy(
-    [
-      'root',
-      data.reduce(reduceDimensions(dimensions), new Map<string, Datum>())
-    ],
-    ([_label, children]: [string, Datum]) => {
-      return children instanceof Map ? [...children.entries()] : null
-    }
-  )
 }
 
 const vis: TreemapVisualization = {
