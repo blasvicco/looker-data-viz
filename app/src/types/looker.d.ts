@@ -1,60 +1,46 @@
-
 /*********************/
-/****** Public *******/
+/****** Private ******/
 /*********************/
 // type declaration
-export type VisConfigValue = any
-export type VisData = Row[]
+type VisConfigValue = any
 
 // Interface declaration
-export interface Cell {
-  [key: string]: any
-  value: any
-  rendered?: string
-  html?: string
-  links?: Link[]
-}
-
-export interface DrillOptions {
+interface DrillOptions {
   links: Link[]
   event: Event
 }
 
-export interface Link {
+interface Link {
   label: string
   type: string
   type_label: string
   url: string
 }
 
-export interface LookerChartsType {
+interface LookerChartsType {
   Utils: LookerChartsUtils
 }
 
-export interface LookerChartsUtils {
+interface LookerChartsUtils {
   openDrillMenu(options: DrillOptions)
 }
 
-export interface Pivot {
+interface Pivot {
   key: string
   is_total: boolean
   data: { [key: string]: string }
   metadata: { [key: string]: { [key: string]: string } }
 }
 
-export interface PivotCell {
+interface PivotCell {
   [pivotKey: string]: Cell
 }
 
-export interface Row {
-  [fieldName: string]: PivotCell | Cell
-}
-
-export interface VisConfig {
+interface VisConfig {
   [key: string]: VisConfigValue
 }
 
-export interface VisOption {
+interface VisOption {
   type: string
   values?: VisOptionValue[]
   display?: string
@@ -70,12 +56,56 @@ export interface VisOption {
   required?: boolean
 }
 
-export interface VisOptions {
+interface VisOptions {
   [optionName: string]: VisOption
 }
 
-export interface VisOptionValue {
+interface VisOptionValue {
   [label: string]: string
+}
+
+interface VisUpdateDetails {
+  changed: {
+    config?: string[];
+    data?: boolean;
+    queryResponse?: boolean;
+    size?: boolean;
+  }
+}
+
+interface VisualizationError {
+  group?: string
+  message?: string
+  title?: string
+  retryable?: boolean
+  warning?: boolean
+}
+
+interface Looker {
+  plugins: {
+    visualizations: {
+      add: (visualization: VisualizationDefinition) => void;
+    };
+  }
+}
+
+/*********************/
+/****** Public *******/
+/*********************/
+// type declaration
+export type VisData = Row[]
+
+// Interface declaration
+export interface Cell {
+  [key: string]: any
+  value: any
+  rendered?: string
+  html?: string
+  links?: Link[]
+}
+
+export interface Row {
+  [fieldName: string]: PivotCell | Cell
 }
 
 export interface VisQueryResponse {
@@ -85,23 +115,6 @@ export interface VisQueryResponse {
     [key: string]: any[];
   }
   pivots: Pivot[]
-}
-
-export interface VisUpdateDetails {
-  changed: {
-    config?: string[];
-    data?: boolean;
-    queryResponse?: boolean;
-    size?: boolean;
-  }
-}
-
-export interface VisualizationError {
-  group?: string
-  message?: string
-  title?: string
-  retryable?: boolean
-  warning?: boolean
 }
 
 export interface VisualizationDefinition {
@@ -128,14 +141,6 @@ export interface VisualizationDefinition {
     updateComplete: () => void
   ) => void
   destroy?: () => void
-}
-
-export interface Looker {
-  plugins: {
-    visualizations: {
-      add: (visualization: VisualizationDefinition) => void;
-    };
-  }
 }
 
 // Global declaration
