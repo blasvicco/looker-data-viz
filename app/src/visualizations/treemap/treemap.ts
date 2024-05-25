@@ -69,70 +69,73 @@ const weightedMean = <T>(
   return numerator && numerator / denominator
 }
 
+// defining visualization object
 const vis: TreemapVisualization = {
+  // object attributes
   id: 'treemap',
   label: 'Tree Map',
   options: {
-    fontSize: {
-      type: 'number',
-      label: 'Font Size',
-      display: 'range',
-      min: 8,
-      max: 32,
-      step: 2,
-      default: 14,
-      order: 1
-    },
     displayMeasure: {
-      type: 'boolean',
+      default: false,
+      display: 'boolean',
       label: 'Display measure in Labels',
-      display: 'boolean',
-      default: false,
-      order: 2
+      order: 2,
+      type: 'boolean'
     },
-    measureFormat: {
-      type: 'string',
-      label: 'Measure Format',
-      display: 'text',
-      placeholder: 'Spreadsheet-style format code',
-      order: 3
-    },
-    hideClippedLabels: {
-      type: 'boolean',
-      label: 'Hide clipped labels',
-      display: 'boolean',
-      default: false,
-      order: 4
-    },
-    palette: {
-      type: 'array',
-      label: 'Color Palette',
-      display: 'colors',
-      default: DEFAULT_PALETTE,
-      order: 5
+    fontSize: {
+      default: 14,
+      display: 'range',
+      label: 'Font Size',
+      max: 32,
+      min: 8,
+      order: 1,
+      step: 2,
+      type: 'number'
     },
     gradient: {
-      type: 'array',
-      label: 'Gradient',
-      display: 'colors',
       default: DEFAULT_GRADIENT,
-      order: 6
-    },
-    gradientMin: {
-      type: 'number',
-      label: 'Gradient Min. Value',
-      display: 'number',
-      order: 7,
-      display_size: 'half'
+      display: 'colors',
+      label: 'Gradient',
+      order: 6,
+      type: 'array'
     },
     gradientMax: {
-      type: 'number',
-      label: 'Gradient Max. Value',
       display: 'number',
-      order: 8,
       display_size: 'half'
+      label: 'Gradient Max. Value',
+      order: 8,
+      type: 'number'
+    },
+    gradientMin: {
+      display: 'number',
+      display_size: 'half'
+      label: 'Gradient Min. Value',
+      order: 7,
+      type: 'number'
+    },
+    hideClippedLabels: {
+      default: false,
+      display: 'boolean',
+      label: 'Hide clipped labels',
+      order: 4,
+      type: 'boolean'
+    },
+    measureFormat: {
+      display: 'text',
+      label: 'Measure Format',
+      order: 3,
+      placeholder: 'Spreadsheet-style format code',
+      type: 'string'
+    },
+    palette: {
+      default: DEFAULT_PALETTE,
+      display: 'colors',
+      label: 'Color Palette',
+      order: 5,
+      type: 'array'
     }
   },
+  // object methods
   create: function (element, settings) {
     this.frame = select(element)
       .append('svg')
