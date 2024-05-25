@@ -12,6 +12,9 @@ import { formatType, generateUid } from 'common/util'
 import { VisDefinition, VisData, Row, Cell } from 'types/looker'
 import './treemap.css'
 
+/*********************/
+/****** Private ******/
+/*********************/
 interface TreemapVisualization extends VisDefinition {
   frame?: Selection<SVGGElement, unknown, null, undefined>
   focusRing?: Selection<SVGRectElement, unknown, null, undefined>
@@ -377,4 +380,7 @@ const vis: TreemapVisualization = {
   }
 }
 
+/*********************/
+/****** Public *******/
+/*********************/
 export default vis
