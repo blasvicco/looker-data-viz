@@ -1,6 +1,88 @@
+// Lib imports
 import { format } from 'd3-format'
+
+// App imports
 import { VisualizationDefinition, VisQueryResponse } from 'types/looker'
 
+/*********************/
+/****** Private ******/
+/*********************/
+// type declaration
+type GroupError = {
+  group: string;
+  message: string;
+  title: string;
+}
+
+// interface declaration
+interface TGroup {
+  count: number
+  max?: number
+  min?: number
+  name: string
+  noun: string
+}
+
+// class declaration
+class CGroup implements TGroup {
+  count: number
+  max?: number
+  min?: number
+  name: string
+  noun: string
+
+  constructor(group: TGroup) {
+    this.count = group.count
+    this.max = group.max
+    this.min = group.min
+    this.name = group.name
+    this.noun = group.noun
+  }
+
+  pluralize = (): string => {
+    return `${this.noun.toLowerCase()}${this.min === 1 ? '' : 's'}`
+  }
+
+  validate = (): GroupError => {
+    const msg = {
+      min: {
+        required: 'at least',
+        title: 'Not Enough',
+        value: this.min
+      },
+      max: {
+        required: 'no more than',
+        title: 'Too many',
+        value: this.max
+      }
+    }
+    const response: GroupError = {
+      group: this.name,
+      message: '',
+      title: ''
+    }
+    const eType: string = (this.min && this.count < this.min)
+      ? 'min'
+      : (this.max && this.count > this.max)
+        ? 'max'
+        : ''
+    if (eType) {
+      const field = eType as keyof typeof msg
+      const required = (this.min !== this.max && msg[field].required) || 'exactly'
+      response.message = `This visualization requires ${required} ${msg[field].value} ${this.pluralize()}.`
+      response.title = `${msg[field].title} ${this.noun}s`
+    }
+    return response
+  }
+}
+
+// static variable
+let uid = 0
+
+/*********************/
+/****** Public *******/
+/*********************/
+// Interface declaration
 export interface ValidationOptions {
   min_pivots?: number
   max_pivots?: number
@@ -10,67 +92,47 @@ export interface ValidationOptions {
   max_measures?: number
 }
 
+// Method declaration
 export const validateResponse = (
   vis: VisualizationDefinition,
   res: VisQueryResponse,
   options: ValidationOptions
 ) => {
-  const check = (
-    group: string,
-    noun: string,
-    count: number,
-    min?: number,
-    max?: number
-  ): boolean => {
+  const check = (OGroup: CGroup): boolean => {
     if (!vis.addError || !vis.clearErrors) return false
-    if (min && count < min) {
-      vis.addError({
-        title: `Not Enough ${noun}s`,
-        message: `This visualization requires ${
-          min === max ? 'exactly' : 'at least'
-        } ${min} ${noun.toLowerCase()}${min === 1 ? '' : 's'}.`,
-        group
-      })
+    const error = OGroup.validate()
+    if (error.title) {
+      vis.addError({ ...error })
       return false
     }
-    if (max && count > max) {
-      vis.addError({
-        title: `Too Many ${noun}s`,
-        message: `This visualization requires ${
-          min === max ? 'exactly' : 'no more than'
-        } ${max} ${noun.toLowerCase()}${min === 1 ? '' : 's'}.`,
-        group
-      })
-      return false
-    }
-    vis.clearErrors(group)
+    vis.clearErrors(OGroup.name)
     return true
   }
 
   const { pivots, dimensions, measure_like: measures } = res.fields
 
   return (
-    check(
-      'pivot-req',
-      'Pivot',
-      pivots.length,
-      options.min_pivots,
-      options.max_pivots
-    ) &&
-    check(
-      'dim-req',
-      'Dimension',
-      dimensions.length,
-      options.min_dimensions,
-      options.max_dimensions
-    ) &&
-    check(
-      'mes-req',
-      'Measure',
-      measures.length,
-      options.min_measures,
-      options.max_measures
-    )
+    check(new CGroup({
+      name: 'pivot-req',
+      noun: 'Pivot',
+      count: pivots.length,
+      max: options.max_pivots,
+      min: options.min_pivots
+    })) &&
+    check(new CGroup({
+      name: 'dim-req',
+      noun: 'Dimension',
+      count: dimensions.length,
+      max: options.max_dimensions,
+      min: options.min_dimensions
+    })) &&
+    check(new CGroup({
+      name: 'mes-req',
+      noun: 'Measure',
+      count: measures.length,
+      max: options.max_measures,
+      min: options.min_measures
+    }))
   )
 }
 
@@ -109,5 +171,4 @@ export const formatType = (valueFormat: string) => {
   return format(specifier)
 }
 
-let uid = 0
 export const generateUid = () => ++uid
