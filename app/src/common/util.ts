@@ -84,7 +84,7 @@ let uid = 0
 /*********************/
 /****** Public *******/
 /*********************/
-// Interface declaration
+// interface declaration
 export interface ValidationOptions {
   min_pivots?: number
   max_pivots?: number
