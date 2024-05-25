@@ -5,11 +5,11 @@ import { interpolateRgbBasis } from 'd3-interpolate'
 import { extent } from 'd3-array'
 import { hsl } from 'd3-color'
 import clsx from 'clsx'
-import { VisualizationDefinition, VisData, Row, Cell } from 'types/looker'
+import { VisDefinition, VisData, Row, Cell } from 'types/looker'
 import { formatType, generateUid } from 'common/util'
 import './treemap.css'
 
-interface TreemapVisualization extends VisualizationDefinition {
+interface TreemapVisualization extends VisDefinition {
   frame?: Selection<SVGGElement, unknown, null, undefined>
   focusRing?: Selection<SVGRectElement, unknown, null, undefined>
 }

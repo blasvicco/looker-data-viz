@@ -40,6 +40,14 @@ interface VisConfig {
   [key: string]: VisConfigValue
 }
 
+interface VisError {
+  group?: string
+  message?: string
+  title?: string
+  retryable?: boolean
+  warning?: boolean
+}
+
 interface VisOption {
   type: string
   values?: VisOptionValue[]
@@ -73,18 +81,10 @@ interface VisUpdateDetails {
   }
 }
 
-interface VisualizationError {
-  group?: string
-  message?: string
-  title?: string
-  retryable?: boolean
-  warning?: boolean
-}
-
 interface Looker {
   plugins: {
     visualizations: {
-      add: (visualization: VisualizationDefinition) => void;
+      add: (visualization: VisDefinition) => void;
     };
   }
 }
@@ -108,20 +108,11 @@ export interface Row {
   [fieldName: string]: PivotCell | Cell
 }
 
-export interface VisQueryResponse {
-  [key: string]: any
-  data: VisData
-  fields: {
-    [key: string]: any[];
-  }
-  pivots: Pivot[]
-}
-
-export interface VisualizationDefinition {
+export interface VisDefinition {
   id?: string
   label?: string
   options: VisOptions
-  addError?: (error: VisualizationError) => void
+  addError?: (error: VisError) => void
   clearErrors?: (errorName?: string) => void
   create: (element: HTMLElement, settings: VisConfig) => void
   trigger?: (event: string, config: object[]) => void
@@ -141,6 +132,15 @@ export interface VisualizationDefinition {
     updateComplete: () => void
   ) => void
   destroy?: () => void
+}
+
+export interface VisQueryResponse {
+  [key: string]: any
+  data: VisData
+  fields: {
+    [key: string]: any[];
+  }
+  pivots: Pivot[]
 }
 
 // Global declaration

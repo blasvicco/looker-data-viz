@@ -2,7 +2,7 @@
 import { format } from 'd3-format'
 
 // App imports
-import { VisualizationDefinition, VisQueryResponse } from 'types/looker'
+import { VisDefinition, VisQueryResponse } from 'types/looker'
 
 /*********************/
 /****** Private ******/
@@ -94,7 +94,7 @@ export interface ValidationOptions {
 
 // Method declaration
 export const validateResponse = (
-  vis: VisualizationDefinition,
+  vis: VisDefinition,
   res: VisQueryResponse,
   options: ValidationOptions
 ) => {
