@@ -36,11 +36,9 @@ const weightedMean = <T>(
   weight: (t: T) => number
 ) => {
   const denominator = Array.from(collection)
-    .map(weight)
-    .reduce((a, b) => a + b, 0)
+    .reduce((sum, item) => sum + weight(item), 0)
   const numerator = Array.from(collection)
-    .map((t) => weight(t) * value(t))
-    .reduce((a, b) => a + b, 0)
+    .reduce((sum, item) => sum + weight(item) * value(item), 0)
   return numerator && numerator / denominator
 }
 
