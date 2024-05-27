@@ -1,1 +1,2 @@
-export { default } from "./treemap";
+// Module export
+export { default } from './treemap'

@@ -26,6 +26,17 @@ docker exec -it enveritas yarn build
 docker compose down
 ```
 
+### Notes
+You can also login into the container if you want to call `yarn` commands, for instance:
+```BASH
+docker exec -it enveritas sh
+yarn lint
+```
+This also can be called from the host machine
+```BASH
+docker exec -it enveritas yarn lint
+```
+
 ### TreeMap
 
 ![TreeMap Screenshot](/app/assets/screenshot.png)

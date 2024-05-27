@@ -1,113 +1,162 @@
-import { format } from "d3-format";
-import { VisualizationDefinition, VisQueryResponse } from "types/looker";
+// Lib imports
+import { format } from 'd3-format'
 
-export interface ValidationOptions {
-  min_pivots?: number;
-  max_pivots?: number;
-  min_dimensions?: number;
-  max_dimensions?: number;
-  min_measures?: number;
-  max_measures?: number;
+// App imports
+import { VisDefinition, VisQueryResponse } from 'types/looker'
+
+/*********************/
+/****** Private ******/
+/*********************/
+// type declaration
+type GroupError = {
+  group: string;
+  message: string;
+  title: string;
 }
 
+// interface declaration
+interface TGroup {
+  count: number
+  max?: number
+  min?: number
+  name: string
+  noun: string
+}
+
+// class declaration
+class CGroup implements TGroup {
+  // attributes declaration
+  count: number
+  max?: number
+  min?: number
+  name: string
+  noun: string
+
+  // methods declaration
+  constructor(group: TGroup) {
+    this.count = group.count
+    this.max = group.max
+    this.min = group.min
+    this.name = group.name
+    this.noun = group.noun
+  }
+
+  pluralize = (): string => {
+    return `${this.noun.toLowerCase()}${this.min === 1 ? '' : 's'}`
+  }
+
+  validate = (): GroupError => {
+    const msg = {
+      min: {
+        required: 'at least',
+        title: 'Not Enough',
+        value: this.min
+      },
+      max: {
+        required: 'no more than',
+        title: 'Too many',
+        value: this.max
+      }
+    }
+    const response: GroupError = {
+      group: this.name,
+      message: '',
+      title: ''
+    }
+    const eType: string = (this.min && this.count < this.min)
+      ? 'min'
+      : (this.max && this.count > this.max)
+        ? 'max'
+        : ''
+    if (eType) {
+      const field = eType as keyof typeof msg
+      const required = (this.min !== this.max && msg[field].required) || 'exactly'
+      response.message = `This visualization requires ${required} ${msg[field].value} ${this.pluralize()}.`
+      response.title = `${msg[field].title} ${this.noun}s`
+    }
+    return response
+  }
+}
+
+// static variable
+let uid = 0
+
+/*********************/
+/****** Public *******/
+/*********************/
+// interface declaration
+export interface ValidationOptions {
+  min_pivots?: number
+  max_pivots?: number
+  min_dimensions?: number
+  max_dimensions?: number
+  min_measures?: number
+  max_measures?: number
+}
+
+// Method declaration
 export const validateResponse = (
-  vis: VisualizationDefinition,
+  vis: VisDefinition,
   res: VisQueryResponse,
   options: ValidationOptions
 ) => {
-  const check = (
-    group: string,
-    noun: string,
-    count: number,
-    min?: number,
-    max?: number
-  ): boolean => {
-    if (!vis.addError || !vis.clearErrors) return false;
-    if (min && count < min) {
-      vis.addError({
-        title: `Not Enough ${noun}s`,
-        message: `This visualization requires ${
-          min === max ? "exactly" : "at least"
-        } ${min} ${noun.toLowerCase()}${min === 1 ? "" : "s"}.`,
-        group,
-      });
-      return false;
+  const check = (OGroup: CGroup): boolean => {
+    if (!vis.addError || !vis.clearErrors) return false
+    const error = OGroup.validate()
+    if (error.title) {
+      vis.addError({ ...error })
+      return false
     }
-    if (max && count > max) {
-      vis.addError({
-        title: `Too Many ${noun}s`,
-        message: `This visualization requires ${
-          min === max ? "exactly" : "no more than"
-        } ${max} ${noun.toLowerCase()}${min === 1 ? "" : "s"}.`,
-        group,
-      });
-      return false;
-    }
-    vis.clearErrors(group);
-    return true;
-  };
+    vis.clearErrors(OGroup.name)
+    return true
+  }
 
-  const { pivots, dimensions, measure_like: measures } = res.fields;
+  const { pivots, dimensions, measure_like: measures } = res.fields
 
   return (
-    check(
-      "pivot-req",
-      "Pivot",
-      pivots.length,
-      options.min_pivots,
-      options.max_pivots
-    ) &&
-    check(
-      "dim-req",
-      "Dimension",
-      dimensions.length,
-      options.min_dimensions,
-      options.max_dimensions
-    ) &&
-    check(
-      "mes-req",
-      "Measure",
-      measures.length,
-      options.min_measures,
-      options.max_measures
-    )
-  );
-};
+    check(new CGroup({
+      name: 'pivot-req',
+      noun: 'Pivot',
+      count: pivots.length,
+      max: options.max_pivots,
+      min: options.min_pivots
+    })) &&
+    check(new CGroup({
+      name: 'dim-req',
+      noun: 'Dimension',
+      count: dimensions.length,
+      max: options.max_dimensions,
+      min: options.min_dimensions
+    })) &&
+    check(new CGroup({
+      name: 'mes-req',
+      noun: 'Measure',
+      count: measures.length,
+      max: options.max_measures,
+      min: options.min_measures
+    }))
+  )
+}
 
 export const formatType = (valueFormat: string) => {
-  if (!valueFormat) return format("");
-  let specifier = "";
-  switch (valueFormat.charAt(0)) {
-    case "$":
-      specifier += "$";
-      break;
-    case "£":
-      specifier += "£";
-      break;
-    case "€":
-      specifier += "€";
-      break;
+  if (!valueFormat) return format('')
+  let specifier = (valueFormat.charAt(0) in ['$', '£', '€'])
+    ? valueFormat.charAt(0)
+    : ''
+  if (valueFormat.indexOf(',') > -1) {
+    specifier += ','
   }
-  if (valueFormat.indexOf(",") > -1) {
-    specifier += ",";
+  const splitValueFormat = valueFormat.split('.')
+  specifier += '.'
+  specifier += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0
+  const translator = {
+    '%': '%',
+    '0': 'f',
+    's': 's'
   }
-  const splitValueFormat = valueFormat.split(".");
-  specifier += ".";
-  specifier += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0;
+  const key = valueFormat.slice(-1) as keyof typeof translator
+  specifier += translator[key] || ''
+  return format(specifier)
+}
 
-  switch (valueFormat.slice(-1)) {
-    case "%":
-      specifier += "%";
-      break;
-    case "0":
-      specifier += "f";
-      break;
-    case "s":
-      specifier += "s";
-      break;
-  }
-  return format(specifier);
-};
-
-let uid = 0;
-export const generateUid = () => ++uid;
+export const generateUid = () => ++uid

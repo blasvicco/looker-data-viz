@@ -5,7 +5,9 @@
   "author": "",
   "license": "MPL-2.0",
   "scripts": {
-    "build": "webpack --mode production && cp ../yarn.lock ./"
+    "build": "webpack --mode production && cp ../yarn.lock ./",
+    "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
+    "fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'"
   },
   "devDependencies": {
     "@babel/core": "^7.13.10",
@@ -23,6 +25,8 @@
     "prettier": "^2.2.1",
     "style-loader": "^2.0.0",
     "ts-loader": "^8.0.18",
+    "tslint": "5.8.0",
+    "tslint-config-standard": "7.0.0",
     "typescript": "^4.2.3",
     "webpack": "^5.26.3",
     "webpack-bundle-analyzer": "^4.4.0",

@@ -1,7 +1,7 @@
 FROM node:22-alpine
 
-ENV ESSENTIAL_PACKAGES="mlocate" \
-    UTILITY_PACKAGES="vim" \
+ENV ESSENTIAL_PACKAGES="" \
+    UTILITY_PACKAGES="mlocate vim" \
     PATH="${PATH}:/home/node_modules"
 
 RUN apk update && \
